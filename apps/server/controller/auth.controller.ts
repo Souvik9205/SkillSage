@@ -32,7 +32,7 @@ export const signupController = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { email } = req.body;
+  const { email } = req.params;
 
   if (!email) {
     res.status(400).json({ message: "Email is required" });
@@ -52,7 +52,7 @@ export const OTPVerificationController = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { email, otp, imgURL, password, name } = req.body;
+  const { email, otp, avatar, password, name } = req.body;
 
   if (!email || !otp || !name || !password) {
     res
@@ -67,7 +67,7 @@ export const OTPVerificationController = async (
       otp,
       password,
       name,
-      imgURL
+      avatar
     );
     res.status(result.status).json(result.data);
   } catch (error) {

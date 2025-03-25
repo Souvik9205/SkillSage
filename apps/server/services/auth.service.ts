@@ -26,8 +26,6 @@ export const loginService = async (
         status: 404,
         data: {
           message: "User not found",
-          accessToken: "",
-          refreshToken: "",
         },
       };
     }
@@ -38,8 +36,6 @@ export const loginService = async (
         status: 401,
         data: {
           message: "Invalid credentials",
-          accessToken: "",
-          refreshToken: "",
         },
       };
     }
@@ -59,8 +55,6 @@ export const loginService = async (
       status: 500,
       data: {
         message: `Internal server error, ${error}`,
-        accessToken: "",
-        refreshToken: "",
       },
     };
   }
@@ -158,7 +152,7 @@ export const OTPVerificationService = async (
   otp: string,
   password: string,
   name: string,
-  imgURL: string
+  avatar: string
 ): Promise<successfulAuthResponse> => {
   try {
     const user = await prisma.user.findUnique({
@@ -172,8 +166,6 @@ export const OTPVerificationService = async (
         status: 409,
         data: {
           message: "User already exists",
-          accessToken: "",
-          refreshToken: "",
         },
       };
     }
@@ -187,8 +179,6 @@ export const OTPVerificationService = async (
         status: 404,
         data: {
           message: "OTP Not Found",
-          accessToken: "",
-          refreshToken: "",
         },
       };
     }
@@ -198,8 +188,6 @@ export const OTPVerificationService = async (
         status: 400,
         data: {
           message: "Invalid OTP",
-          accessToken: "",
-          refreshToken: "",
         },
       };
     }
@@ -209,7 +197,7 @@ export const OTPVerificationService = async (
         email,
         password: hashedPassword,
         name,
-        imgURL,
+        avatar,
       },
     });
     await prisma.otp.delete({
@@ -233,8 +221,6 @@ export const OTPVerificationService = async (
       status: 500,
       data: {
         message: `Internal server error, ${error}`,
-        accessToken: "",
-        refreshToken: "",
       },
     };
   }
@@ -242,7 +228,7 @@ export const OTPVerificationService = async (
 
 export const refreshTokenService = async (
   refreshToken: string
-): Promise<{ status: number; accessToken: string; message: string }> => {
+): Promise<{ status: number; accessToken?: string; message: string }> => {
   try {
     const decoded = jwt.verify(
       refreshToken,
@@ -263,17 +249,12 @@ export const refreshTokenService = async (
     ) {
       return {
         status: 400,
-        accessToken: "",
         message: "Unauthorized",
       };
     }
     return {
       status: 500,
-      accessToken: "",
       message: "Internal server error",
     };
   }
 };
-
-//TODO-
-// 1. Add forgot password feature

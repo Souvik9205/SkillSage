@@ -9,7 +9,7 @@ import {
 const authRouter = Router();
 
 authRouter.post("/login", loginController);
-authRouter.post("/signup", signupController);
+authRouter.get("/signup/:email", signupController);
 authRouter.post("/otp-verify", OTPVerificationController);
 
 authRouter.get("/token-verify", tokenVerifyController);

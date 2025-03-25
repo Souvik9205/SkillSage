@@ -8,6 +8,7 @@ import userRouter from "./routes/user.routes";
 import interviewRouter from "./routes/interview.routes";
 
 import aiRouter from "./routes/ai.routes";
+import carrerRouter from "./routes/carrer.routes";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/v1/job", jobRouter);
 app.use("/api/v1/invite", inviteRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/interview", interviewRouter);
+app.use("/api/v1/carrier", carrerRouter);
 
 app.use("/api/v1/ai", aiRouter);
 

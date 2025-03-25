@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,13 +12,81 @@ model User {
   email     String   @unique
   password  String
   name      String?
-  imgURL    String? 
+  avatar    String? 
+  points         Int         @default(0)
+  onboardingResponses OnboardingResponse?
+
+  learningProgress   UserLearningProgress[]
+  interviews         Interview[]
+
+  sentConnections    Connection[] @relation("SentConnections")
+  receivedConnections Connection[] @relation("ReceivedConnections")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  context   String?
+}
 
-  jobPosts   JobPost[]
-  interviews Interview[]
+model OnboardingResponse {
+  id        String   @id @default(uuid()) 
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  ageGroup  AgeGroup?
+  experience Experience?
+  purpose    Purpose?
+  compleated Boolean   @default(false)
+  createdAt DateTime @default(now())
+}
+
+model CareerPath {
+  id            String         @id @default(uuid())
+  name          String
+  description   String?
+  img           String?
+
+  learningNodes LearningNode[]
+  subscriptions UserLearningProgress[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model LearningNode {
+  id           String         @id @default(uuid())
+  title        String
+  order        Int
+  type         LearningNodeType
+  rewardPoints Int            @default(0)
+
+  careerPathId String?
+  careerPath   CareerPath?    @relation(fields: [careerPathId], references: [id])
+}
+
+model UserLearningProgress {
+  id           String       @id @default(uuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id])
+  careerPathId String       
+  careerPath   CareerPath   @relation(fields: [careerPathId], references: [id])
+  
+  score        Int          @default(0)
+  startedAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  currentNodeID  String       @default("")
+  userLearningNodes UserLearningNode[]
+}
+
+model UserLearningNode {
+  id                       String              @id @default(uuid())
+  userLearningProgressId   String
+  userLearningProgress     UserLearningProgress @relation(fields: [userLearningProgressId], references: [id])
+  
+  order                    Int
+  title                    String
+  completed                Boolean             @default(false)
+  updatedAt                DateTime            @updatedAt
+  type         LearningNodeType
+  rewardPoints Int            @default(0)
 }
 
 model Otp {
@@ -35,112 +97,77 @@ model Otp {
   expiresAt DateTime
 }
 
-model JobPost {
-  id              String         @id @default(uuid())
-  ownerId         String
-  owner           User           @relation(fields: [ownerId], references: [id])
-  category        String
-  roles           String[]       
-  videoRequired   Boolean        @default(false)
-  questionType    QuestionType   @default(AI_GENERATED)
-  followUp        Boolean        @default(true)
-  totalQuestions  Int            @default(5)
-  resumeRequired  Boolean        @default(false)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  jobType         InterviewType
-
-  invites         InterviewInvite[]
-  interviews      Interview[]
-  jobQuestions    JobQuestion[]
-}
-
-model JobQuestion {
-  id         String   @id @default(uuid())
-  jobPostId  String
-  jobPost    JobPost  @relation(fields: [jobPostId], references: [id])
-  question   String
-  order      Int
-  createdAt  DateTime @default(now())
-}
-
-model InterviewInvite {
-  id         String         @id @default(uuid())
-  jobPostId  String
-  jobPost    JobPost        @relation(fields: [jobPostId], references: [id])
-  email      String         
-  token      String         
-  status     InviteStatus   @default(PENDING)
-  createdAt  DateTime       @default(now())
-
-  interview Interview?
-}
-
 model Interview {
-  id                String         @id @default(uuid())
-  candidateId       String?        
-  candidate         User?          @relation(fields: [candidateId], references: [id])
+  id         String          @id @default(uuid())
+  userId     String
+  user       User            @relation(fields: [userId], references: [id])
+  type       InterviewType
+  status     InterviewStatus @default(PENDING)
+  feedback   String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 
-  jobPostId         String        
-  jobPost           JobPost       @relation(fields: [jobPostId], references: [id])
-
-  interviewInviteId String?        @unique
-  interviewInvite   InterviewInvite? @relation(fields: [interviewInviteId], references: [id])
-  
-  status            InterviewStatus  @default(PENDING)
-  evaluationData    EvaluationData? 
-  feedback          String?     
-  
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  qas               InterviewQA[]
+  qas        InterviewQA[]
 }
 
 model InterviewQA {
-  id           String    @id @default(uuid())
-  interviewId  String
-  interview    Interview @relation(fields: [interviewId], references: [id])
-  question     String
-  answer       String  
-  order        Int      
-  createdAt    DateTime  @default(now())
+  id          String    @id @default(uuid())
+  interviewId String
+  interview   Interview @relation(fields: [interviewId], references: [id])
+  question    String
+  answer      String
+  createdAt   DateTime  @default(now())
 }
 
-model EvaluationData {
-  id               String @id @default(uuid())
-  interviewId      String @unique
-  interview        Interview @relation(fields: [interviewId], references: [id])
-
-  relevanceRatting Int @default(0)
-  fumbleRatting    Int @default(0)
-  behaviourRatting Int @default(0)
-
-  questionCount    Int @default(0)
+model Connection {
+  id           String            @id @default(uuid())
+  requesterId  String
+  requester    User              @relation("SentConnections", fields: [requesterId], references: [id])
+  receiverId   String
+  receiver     User              @relation("ReceivedConnections", fields: [receiverId], references: [id])
+  status       ConnectionStatus  @default(PENDING)
+  createdAt    DateTime          @default(now())
 }
 
-enum QuestionType {
-  HARDCODED
-  AI_GENERATED
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 enum InterviewType {
-  MOCK
-  JOB
-}
-
-enum Difficulty {
-  EASY
-  MEDIUM
-  HARD
-}
-
-enum InviteStatus {
-  PENDING
-  COMPLETED
+  COMPANY_BASED
+  CODING
+  APTITUDE
 }
 
 enum InterviewStatus {
   PENDING
   COMPLETED
+  REVIEWED
+}
+
+enum LearningNodeType {
+  MODULE  
+  TEST    
+}
+
+enum AgeGroup {
+  UNDER_18
+  AGE_18_TO_25
+  AGE_25_TO_30
+  OVER_30
+}
+
+enum Experience {
+  UNDER_1YR
+  BETWEEN_1_TO_2YR
+  BETWEEN_3_TO_5YR
+  OVER_5YR
+}
+
+enum Purpose {
+  LEARNING 
+  NETWORKING
+  INTERVIEW
 }
